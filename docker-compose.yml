@@ -1,0 +1,63 @@
+version: '3'
+services:
+  influxdb:
+    image: influxdb:latest
+    volumes:
+      # Mount for influxdb data directory and configuration
+      - /home/developer/cicd/influxdb2:/var/lib/influxdb2:rw
+    ports:
+      - "8086:8086"
+  # Use the influx cli to set up an influxdb instance.
+
+  influxdb_cli:
+    links:
+      - influxdb
+    image: influxdb
+    volumes:
+    - /home/developer/cicd/influxdb2:/var/lib/influxdb2:rw
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=hsingh5
+      - DOCKER_INFLUXDB_INIT_PASSWORD=C!sco12345
+      - DOCKER_INFLUXDB_INIT_ORG=TRN6-LAB
+      - DOCKER_INFLUXDB_INIT_BUCKET=telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=hsingh5Tok12345
+    entrypoint: ["./entrypoint.sh"]
+    depends_on:
+      - influxdb
+
+  telegraf:
+    image: telegraf
+    links:
+      - influxdb
+    volumes:
+      # Mount for telegraf config
+      - /home/developer/cicd/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+    environment: 
+      - DOCKER_INFLUXDB_INIT_ORG=TRN6-LAB
+      - DOCKER_INFLUXDB_INIT_BUCKET=telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=hsingh5C!sco12345
+    ports:
+      - '50001:50001'
+
+  grafana: 
+    image: grafana/grafana-enterprise
+    container_name: grafana_2
+    restart: always
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    links:
+      - influxdb
+    ports:
+      - '3000:3000'
+    volumes:
+    - /home/developer/cicd/grafana_data:/var/lib/grafana:rw
+  
+
+volumes:
+  influxdb2:
+  grafana_data:

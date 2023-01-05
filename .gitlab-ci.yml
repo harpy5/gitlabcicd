@@ -1,0 +1,32 @@
+default:
+    image: python:3.8.10
+    before_script:
+        - pip --proxy http://64.102.255.40:8080 install -r requirements.txt
+    
+
+stages: 
+    - new_lab_deployment
+    - config_snap
+
+new_lab_deployment:
+    stage: new_lab_deployment
+    script:
+        - python cml-base-conf.py
+    artifacts:
+        paths:
+        - newtest.yml
+
+config_snap:
+    stage: config_snap
+    script:
+        - python pyats-snap.py
+    artifacts:
+        paths:
+#        - ospf_pre.json
+#        - interface_pre.json
+#        - ospf_after.json
+#        - interface_post.json
+        
+        - ospf_post_neighbor.json
+#       - ospf_pre_neighbor.json
+#        - ospf_diff.txt
